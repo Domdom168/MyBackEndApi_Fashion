@@ -10,7 +10,7 @@ namespace MyBackEndApi.Services
         private static readonly HashSet<string> ValidStatuses = new() { "pending", "processing", "completed", "cancelled" };
         private static readonly Dictionary<string, List<string>> AllowedTransitions = new()
         {
-            ["pending"] = new() { "processing", "cancelled" },
+            ["pending"] = new() { "processing", "cancelled","completed" },
             ["processing"] = new() { "completed", "cancelled" },
             ["completed"] = new(),
             ["cancelled"] = new()
@@ -131,7 +131,7 @@ namespace MyBackEndApi.Services
                 Items = order.OrderItems.Select(oi => new OrderItemDto
                 {
                     ProductId = oi.ProductId,
-                    ProductName = oi.Product.NameEnglish ?? oi.Product.NameKhmer,
+                    //ProductName = oi.Product.NameEnglish ?? oi.Product.NameKhmer,
                     Quantity = oi.Quantity,
                     Price = oi.Price,
                     SelectedSize = oi.SelectedSize,
@@ -139,5 +139,6 @@ namespace MyBackEndApi.Services
                 }).ToList()
             };
         }
+
     }
 }

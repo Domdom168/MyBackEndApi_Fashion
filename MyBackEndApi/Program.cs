@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MyBackEndApi.Data;
+using MyBackEndApi.Models;
 using MyBackEndApi.Services;
 using System.Text;
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +16,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer(options => 
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -43,6 +44,11 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ISalesService, SalesService>();
+builder.Services.AddScoped<ILowStockAlertService, LowStockAlertService>();
+builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
+
+builder.Services.Configure<BakongSettings>(builder.Configuration.GetSection("Bakong"));
+builder.Services.AddHttpClient<IBakongService, BakongService>();
 // Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -72,8 +78,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRouting();
 app.UseCors("AllowReactApp");
-
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

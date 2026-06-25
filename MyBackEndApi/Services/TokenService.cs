@@ -17,7 +17,7 @@ namespace MyBackEndApi.Services
         public string GenerateAccessToken(Admin admin)
         {
             var claims = new[]
-           {    new Claim("userId", admin.Id.ToString()),   // ✅ custom claim
+           {    new Claim("userId", admin.Id.ToString()), 
                 new Claim(JwtRegisteredClaimNames.Sub, admin.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, admin.Email),
                 new Claim(ClaimTypes.NameIdentifier, admin.Id.ToString()),
@@ -33,10 +33,33 @@ namespace MyBackEndApi.Services
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(15),
+                expires: DateTime.UtcNow.AddDays(7),
                 signingCredentials: creds
             );
 
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public string GenerateTokenForUser(User user)
+        {
+            var claims = new[]
+            {
+         new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Name, user.Name),
+        new Claim(ClaimTypes.Role, user.Role ?? "user"),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+             };
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddDays(7),
+                signingCredentials: creds
+            );
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
         public string GenerateRefreshToken()

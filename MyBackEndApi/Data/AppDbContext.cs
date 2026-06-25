@@ -18,8 +18,10 @@ namespace MyBackEndApi.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Sale> Sales { get; set; }
-
-
+        public DbSet<LowStockAlert> LowStockAlerts { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; } 
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<Favorite> Favorites { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configure table names explicitly (if not following convention)
@@ -30,8 +32,12 @@ namespace MyBackEndApi.Data
             modelBuilder.Entity<ProductSize>().ToTable("product_sizes"); 
             modelBuilder.Entity<Sale>().ToTable("sales");
             modelBuilder.Entity<Order>().ToTable("orders");
-            modelBuilder.Entity<OrderItem>().ToTable("order_items");    
-
+            modelBuilder.Entity<OrderItem>().ToTable("order_items");
+            modelBuilder.Entity<Admin>().ToTable("admins");
+            modelBuilder.Entity<User>().ToTable("users");
+            modelBuilder.Entity<LowStockAlert>().ToTable("low_stock_alerts");
+            modelBuilder.Entity<Cart>().ToTable("carts");
+            modelBuilder.Entity<Favorite>().ToTable("favorites");
             // ... existing mappings
             modelBuilder.Entity<RefreshToken>().ToTable("refresh_tokens");
 

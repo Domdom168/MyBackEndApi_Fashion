@@ -7,16 +7,17 @@ namespace MyBackEndApi.Models
     public class Sale
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Column("order_id")]
         public int OrderId { get; set; }
-        [ForeignKey("id")]
+        //[ForeignKey("id")]
         public Order? Order { get; set; }
 
         [Column("cashier_id")]
         public int? CashierId { get; set; }
-        [ForeignKey("id")]
+        //[ForeignKey("id")]
         public Admin? Cashier { get; set; }
 
         [Column("total_amount")]

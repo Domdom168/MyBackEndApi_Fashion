@@ -17,6 +17,6 @@ namespace MyBackEndApi.Models
         public string? ColorName { get; set; }
 
         [Column("color_hex")]
-        public string? ColorHex { get; set; }  // nullable if DB allows NULL
+        public string? ColorHex { get; set; } 
     }
 }

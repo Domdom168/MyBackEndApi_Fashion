@@ -9,8 +9,8 @@
         public string NameEnglish { get; set; }
         public string? CategoryKhmer { get; set; }      // from categories.name_english
         public string? CategoryEnglish { get; set; }
-        public string? DescriptionKhmer { get; set; }          // from product_details.description
-        public string? DescriptionEnglish { get; set; }
+        public string DescriptionKhmer { get; set; } = "";         // from product_details.description
+        public string DescriptionEnglish { get; set; } = "";
         public decimal Price { get; set; }
         public int Stock { get; set; }
         public decimal Rating { get; set; }

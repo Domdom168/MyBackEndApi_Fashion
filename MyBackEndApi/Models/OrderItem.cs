@@ -11,12 +11,12 @@ namespace MyBackEndApi.Models
 
         [Column("order_id")]
         public int OrderId { get; set; }
-        [ForeignKey("id")]
+        //[ForeignKey("id")]
         public Order? Order { get; set; }
 
         [Column("product_id")]
         public int ProductId { get; set; }
-        [ForeignKey("id")]
+        //[ForeignKey("id")]
         public Product? Product { get; set; }
         [Column("quantity")]
         public int Quantity { get; set; }

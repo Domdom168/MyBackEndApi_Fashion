@@ -20,10 +20,10 @@ namespace MyBackEndApi.Models
         public string? NameEnglish { get; set; }
 
         [Column("description_khmer")]
-        public string? DescriptionKhmer { get; set; }
+        public string DescriptionKhmer { get; set; } = "";
 
         [Column("description_english")]
-        public string? DescriptionEnglish { get; set; }
+        public string DescriptionEnglish { get; set; } = "";
 
         [Column(TypeName = "decimal(10,2)")]
         public decimal Price { get; set; }

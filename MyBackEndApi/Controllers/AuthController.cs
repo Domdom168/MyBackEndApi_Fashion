@@ -195,12 +195,6 @@ namespace MyBackEndApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto loginDto)
         {
-            //var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-            //var result = await _authService.LoginAsync(loginDto, ip);
-            //if (result == null) return Unauthorized(new { message = "Invalid email or password" });
-
-            //SetTokenCookies(result.AccessToken, result.RefreshToken);
-            //return Ok(result.User);
             var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Email == loginDto.Email);
             if (admin == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, admin.Password))
                 return Unauthorized();
@@ -208,7 +202,18 @@ namespace MyBackEndApi.Controllers
             var refreshToken = _tokenService.GenerateRefreshToken();
             SetTokenCookies(accessToken, refreshToken);
 
-            // ✅ Return all fields the frontend needs (including phone and isActive)
+            // Save refresh token to database
+            var refreshTokenEntity = new RefreshToken
+            {
+                AdminId = admin.Id,
+                Token = refreshToken,
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                CreatedAt = DateTime.UtcNow,
+                CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                IsRevoked = false
+            };
+            _context.RefreshTokens.Add(refreshTokenEntity);
+            await _context.SaveChangesAsync();
             return Ok(new
             {
                 admin.Id,
@@ -237,14 +242,43 @@ namespace MyBackEndApi.Controllers
         public async Task<IActionResult> Refresh()
         {
             var refreshToken = Request.Cookies["refreshToken"];
-            if (string.IsNullOrEmpty(refreshToken)) return Unauthorized();
+            if (string.IsNullOrEmpty(refreshToken))
+                return Unauthorized(new { message = "Refresh token missing" });
 
-            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var result = await _authService.RefreshTokenAsync(refreshToken, ip);
-            if (result == null) return Unauthorized();
+            // Look up token in database
+            var storedToken = await _context.RefreshTokens
+                .Include(rt => rt.Admin)
+                .FirstOrDefaultAsync(rt => rt.Token == refreshToken && !rt.IsRevoked && rt.ExpiresAt > DateTime.UtcNow);
 
-            SetTokenCookies(result.AccessToken, result.RefreshToken);
-            return Ok(result.User);
+            if (storedToken == null || storedToken.Admin == null)
+                return Unauthorized(new { message = "Invalid or expired refresh token" });
+
+            var admin = storedToken.Admin;
+
+            // Revoke the old token (rotation)
+            storedToken.IsRevoked = true;
+            storedToken.RevokedByIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            // Generate new tokens
+            var newAccessToken = _tokenService.GenerateAccessToken(admin);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+            // Save new refresh token
+            var newRefreshTokenEntity = new RefreshToken
+            {
+                AdminId = admin.Id,
+                Token = newRefreshToken,
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                CreatedAt = DateTime.UtcNow,
+                CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                IsRevoked = false
+            };
+            _context.RefreshTokens.Add(newRefreshTokenEntity);
+            await _context.SaveChangesAsync();
+
+            SetTokenCookies(newAccessToken, newRefreshToken);
+
+            return Ok(new { message = "Tokens refreshed" });
         }
 
         [Authorize]

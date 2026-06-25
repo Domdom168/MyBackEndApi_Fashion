@@ -215,6 +215,8 @@ namespace MyBackEndApi.Controllers
                     NameEnglish= p.NameEnglish,
                     CategoryEnglish =  p.Category.NameEnglish,
                     CategoryKhmer= p.Category.NameKhmer,
+                    DescriptionKhmer = p.DescriptionKhmer,
+                    DescriptionEnglish = p.DescriptionEnglish,
                     Price = p.Price,
                     Stock = p.Stock,
                     Rating = p.Rating,

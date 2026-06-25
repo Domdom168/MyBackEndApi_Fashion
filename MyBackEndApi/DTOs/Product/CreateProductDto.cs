@@ -11,8 +11,8 @@ namespace MyBackEndApi.DTOs.Product
         [Required(ErrorMessage = "Product name is required")]
         public string? NameEnglish { get; set; }
         // Description fields
-        public string? DescriptionKhmer { get; set; }
-        public string? DescriptionEnglish { get; set; }
+        public string DescriptionKhmer { get; set; } = "";
+        public string DescriptionEnglish { get; set; }= "";
 
         // Category ID – required (you need to know the category ID from your UI)
         public int CategoryId { get; set; }
