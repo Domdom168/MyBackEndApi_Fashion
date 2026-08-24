@@ -15,5 +15,6 @@ namespace MyBackEndApi.Models
 
         [Column("size")]
         public string? Size { get; set; }
+ 
     }
 }

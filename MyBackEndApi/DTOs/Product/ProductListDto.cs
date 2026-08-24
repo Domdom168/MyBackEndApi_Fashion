@@ -14,6 +14,11 @@
         public decimal Price { get; set; }
         public int Stock { get; set; }
         public decimal Rating { get; set; }
-        public string? Service { get; set; }           // placeholder, e.g., "Available"
+        public string? Service { get; set; }       // placeholder, e.g., "Available"
+        public decimal? DiscountedPrice { get; set; }
+        public string? DiscountType { get; set; }
+        public decimal? DiscountValue { get; set; }
+        public DateTime? DiscountStartDate { get; set; }
+        public DateTime? DiscountEndDate { get; set; }
     }
 }

@@ -95,8 +95,19 @@ namespace MyBackEndApi.Services
 
         public async Task<bool> DeleteCategoryAsync(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _context.Categories
+          .Include(c => c.Products)
+          .FirstOrDefaultAsync(c => c.Id == id);
             if (category == null) return false;
+
+            // Check if category has any products
+            if (category.Products.Any())
+            {
+                throw new InvalidOperationException(
+                    "Cannot delete category because it has associated products. " +
+                    "Please reassign or delete the products first."
+                );
+            }
 
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();

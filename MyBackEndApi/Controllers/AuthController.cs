@@ -309,20 +309,54 @@ namespace MyBackEndApi.Controllers
             return Ok(user);
         }
 
+        //[HttpPost("forgot-password")]
+        //public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+        //{
+        //    await _authService.RequestPasswordResetAsync(dto.Email);
+        //    return Ok(new { message = "If the email exists, a reset link has been sent." });
+        //}
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
         {
-            await _authService.RequestPasswordResetAsync(dto.Email);
-            return Ok(new { message = "If the email exists, a reset link has been sent." });
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var result = await _authService.RequestUserPasswordResetAsync(dto.Email);
+            return Ok(new { message = "If your email is registered, you will receive a reset code." });
         }
 
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
         {
-            var result = await _authService.ResetPasswordAsync(dto.Token, dto.NewPassword);
-            if (!result) return BadRequest(new { message = "Invalid or expired token" });
-            return Ok(new { message = "Password reset successfully" });
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var success = await _authService.ResetUserPasswordAsync(dto.Email, dto.Code, dto.NewPassword);
+            if (!success)
+                return BadRequest(new { message = "Invalid or expired reset code." });
+            return Ok(new { message = "Password reset successfully." });
         }
+        [HttpGet("debug-token/{token}")]
+        public async Task<IActionResult> DebugToken(string token)
+        {
+            var decodedToken = Uri.UnescapeDataString(token);
+            var validTokens = await _context.PasswordResetTokens
+                .Where(t => t.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
+            var matched = validTokens.FirstOrDefault(t => BCrypt.Net.BCrypt.Verify(decodedToken, t.Token));
+            if (matched == null)
+                return Ok(new { exists = false });
+            return Ok(new
+            {
+                exists = true,
+                expiresAt = matched.ExpiresAt,
+                email = matched.Email
+            });
+        }
+
+        //[HttpPost("reset-password")]
+        //public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+        //{
+        //    var result = await _authService.ResetPasswordAsync(dto.Token, dto.NewPassword);
+        //    if (!result) return BadRequest(new { message = "Invalid or expired token" });
+        //    return Ok(new { message = "Password reset successfully" });
+        //}
 
         // ⚠️ ONE‑TIME MIGRATION ENDPOINT – REMOVE AFTER RUNNING
         [HttpPost("migrate-passwords")]
@@ -330,6 +364,79 @@ namespace MyBackEndApi.Controllers
         {
             var count = await _authService.MigratePlainTextPasswordsAsync();
             return Ok(new { message = $"Migrated {count} admin passwords to BCrypt." });
+        }
+        [HttpPut("{id}/reset-password")]
+        [Authorize(Roles = "admin")] // only admin can reset passwords
+        public async Task<IActionResult> ResetPassword(int id, [FromBody] AdminResetPasswordDto dto)
+        {
+            // Check if admin exists
+            var admin = await _context.Admins.FindAsync(id);
+            if (admin == null)
+                return NotFound(new { message = "Admin not found." });
+
+            // Prevent admin from resetting their own password via this endpoint? 
+            // If you want to allow self-reset, you can skip this check.
+            var currentAdminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (currentAdminId == id)
+                return BadRequest(new { message = "Use change-password endpoint for your own account." });
+
+            // Hash new password
+            admin.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            admin.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            // Optionally log the action
+            // await _activityLogService.LogAsync(currentAdminId, "admin", "RESET_PASSWORD", $"Reset password for admin {admin.Email}", ipAddress);
+
+            return Ok(new { message = "Password reset successfully." });
+        }
+
+
+
+        // PUT: api/admins/profile
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] AdminProfileUpdateDto dto)
+        {
+            // Get current admin ID from token
+            var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (adminId == 0)
+                return Unauthorized();
+
+            var admin = await _context.Admins.FindAsync(adminId);
+            if (admin == null)
+                return NotFound(new { message = "Admin not found." });
+
+            // Check email uniqueness (if email is being changed)
+            if (!string.IsNullOrEmpty(dto.Email) && dto.Email != admin.Email)
+            {
+                if (await _context.Admins.AnyAsync(a => a.Email == dto.Email && a.Id != adminId))
+                    return BadRequest(new { message = "Email already in use." });
+                admin.Email = dto.Email;
+            }
+
+            // Update fields
+            if (!string.IsNullOrEmpty(dto.Name))
+                admin.Name = dto.Name;
+            if (!string.IsNullOrEmpty(dto.Phone))
+                admin.Phone = dto.Phone;
+
+            admin.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Profile updated successfully.",
+                admin = new
+                {
+                    admin.Id,
+                    admin.Name,
+                    admin.Email,
+                    admin.Phone,
+                    admin.Role,
+                    admin.IsActive
+                }
+            });
         }
 
         private void SetTokenCookies(string accessToken, string refreshToken)

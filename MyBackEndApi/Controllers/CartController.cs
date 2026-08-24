@@ -10,7 +10,7 @@ namespace MyBackEndApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "user")]
     public class CartController : ControllerBase
     {
         private readonly AppDbContext _context;

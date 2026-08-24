@@ -27,7 +27,6 @@ namespace MyBackEndApi.Models
 
         [Column(TypeName = "decimal(10,2)")]
         public decimal Price { get; set; }
-
         public int Stock { get; set; }
 
         [Column(TypeName = "decimal(3,2)")]
@@ -40,10 +39,24 @@ namespace MyBackEndApi.Models
 
         public DateTime created_at { get; set; }
         public DateTime updated_at { get; set; }
+        [Column("IsDeleted")]
+        public bool IsDeleted { get; set; } = false;
+        [Column("discount_type")]
+        public string? DiscountType { get; set; }
+
+        [Column("discount_value")]
+        public decimal? DiscountValue { get; set; }
+
+        [Column("discount_start_date")]
+        public DateTime? DiscountStartDate { get; set; }
+
+        [Column("discount_end_date")]
+        public DateTime? DiscountEndDate { get; set; }
 
         public ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
         public ICollection<ProductColor> ProductColors { get; set; } = new List<ProductColor>();
         public ICollection<ProductSize> ProductSizes { get; set; } = new List<ProductSize>();
-
+        public ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
+        public ICollection<LowStockAlert> LowStockAlerts { get; set; } = new List<LowStockAlert>();
     }
 }

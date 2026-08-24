@@ -29,7 +29,7 @@ namespace MyBackEndApi.Models
 
         [Column("selected_color_hex")]
         public string? SelectedColorHex { get; set; }
-        [Column("created_at")]
+        [Column("created_at")] 
         public DateTime CreatedAt { get; set; }
     }
 }

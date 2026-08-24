@@ -9,7 +9,7 @@ namespace MyBackEndApi.Models
         [Key]
         public int Id { get; set; }
 
-        [ForeignKey("product_id")]
+        [Column("product_id")]
         public int product_id { get; set; }
         public Product? Product { get; set; }
 

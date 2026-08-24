@@ -58,5 +58,29 @@
             if (File.Exists(filePath))
                 File.Delete(filePath);
         }
+
+
+        //banner image
+        public static async Task<string> SaveBannerImageAsync(IFormFile file, IWebHostEnvironment env)
+        {
+            var uploads = Path.Combine(env.WebRootPath, "images", "banners");
+            if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
+
+            var fileName = $"banner_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var path = Path.Combine(uploads, fileName);
+
+            using var stream = new FileStream(path, FileMode.Create);
+            await file.CopyToAsync(stream);
+
+            return $"/images/banners/{fileName}";
+        }
+
+        public static void DeleteBannerImage(string imageUrl, IWebHostEnvironment env)
+        {
+            if (string.IsNullOrEmpty(imageUrl)) return;
+            var fileName = Path.GetFileName(imageUrl);
+            var path = Path.Combine(env.WebRootPath, "images", "banners", fileName);
+            if (File.Exists(path)) File.Delete(path);
+        }
     }
 }
